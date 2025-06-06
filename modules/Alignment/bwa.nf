@@ -72,23 +72,16 @@ process bwa_align {
     else if( deduped == "Y")
         """
             ${BWA} mem ${indexfiles[0]} ${reads} -t ${threads} -R '@RG\\tID:${pair_id}\\tSM:${pair_id}' > ${pair_id}_alignment.sam
-            # Convert SAM to BAM
             ${SAMTOOLS} view -@ ${threads} -S -b ${pair_id}_alignment.sam > ${pair_id}_alignment.bam
             rm ${pair_id}_alignment.sam
-            # Sort by name for fixmate
             ${SAMTOOLS} sort -@ ${threads} -n ${pair_id}_alignment.bam -o ${pair_id}_alignment_sorted.bam
             rm ${pair_id}_alignment.bam
-            # Add mate information
             ${SAMTOOLS} fixmate -@ ${threads} -m ${pair_id}_alignment_sorted.bam ${pair_id}_alignment_fixmate.bam
-            rm ${pair_id}_alignment_sorted.bam
-            # Sort by coordinate for markdup
             ${SAMTOOLS} sort -@ ${threads} ${pair_id}_alignment_fixmate.bam -o ${pair_id}_alignment_coord_sorted.bam
-            rm ${pair_id}_alignment_fixmate.bam
-            # Mark and remove duplicates
             ${SAMTOOLS} markdup -@ ${threads} -r ${pair_id}_alignment_coord_sorted.bam ${pair_id}_alignment_dedup.bam
             rm ${pair_id}_alignment_coord_sorted.bam
-            # Convert BAM to SAM (optional, may not be needed)
             ${SAMTOOLS} view -@ ${threads} -h -o ${pair_id}_alignment_dedup.sam ${pair_id}_alignment_dedup.bam
+            # this is the most important file to keep: ${pair_id}_alignment_dedup.sam ${pair_id}_alignment_dedup.bam
 
         """
     else
